@@ -17,7 +17,7 @@ export class VersionManager implements IVersionManager<Version> {
    */
   async get(): Promise<Version> {
     console.log('获取版本信息');
-    return await RNCVersionManager.getPackageInfo();
+    return await RNCVersionManager.get();
   }
 
   /**

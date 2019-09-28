@@ -34,7 +34,7 @@ public class VersionManager extends ReactContextBaseJavaModule {
 
     @RequiresApi(api = Build.VERSION_CODES.P)
     @ReactMethod
-    public void getPackageInfo(Promise promise) {
+    public void get(Promise promise) {
         try {
             PackageInfo info = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
             WritableMap response = Arguments.createMap();
@@ -52,8 +52,11 @@ public class VersionManager extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void install(ReadableMap args, final Promise promise) {
-        final DownloadManager downloadManager = (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
+        Log.d(TAG, "开始安装app");
         String downloadUrl = args.getString("downloadUrl");
+        Log.d(TAG, "下载地址: " + downloadUrl);
+
+        final DownloadManager downloadManager = (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
 
         DownloadManager.Request request = new DownloadManager.Request(Uri.parse(downloadUrl));
 
@@ -65,19 +68,29 @@ public class VersionManager extends ReactContextBaseJavaModule {
             request.setDescription(args.getString("description"));
         }
 
+        request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE | DownloadManager.Request.NETWORK_WIFI);
+        request.setMimeType("application/vnd.android.package-archive");
+
+        request.allowScanningByMediaScanner();
+        //在通知栏显示下载进度
+        request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+
         final long downloadId = downloadManager.enqueue(request);
 
         Log.d(TAG, "download id = " + downloadId);
 
-
         BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
             @Override
-            public void onReceive(Context context, Intent intent) {
+            public void onReceive(Context defaultContext, Intent intent) {
                 long completeDownloadId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
                 if (completeDownloadId == downloadId) {
-                    Log.d(TAG, "app 下载成功");
                     Uri uri = downloadManager.getUriForDownloadedFile(downloadId);
-                    Log.d(TAG, "SDK_INT");
+                    if (null == uri) {
+                        Log.w(TAG, "下载失败,可能被用户取消");
+                        promise.reject("FAILURE", "下载失败,可能被用户取消");
+                        return;
+                    }
+                    Log.d(TAG, "app 下载成功");
 
                     Uri apkUri;
                     if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
@@ -87,6 +100,7 @@ public class VersionManager extends ReactContextBaseJavaModule {
                         Log.d(TAG, "file path: " + filePath);
                         apkUri = Uri.parse("file://" + filePath);
                     }
+                    Log.d(TAG, "apk uri:" + apkUri.toString());
 
                     Intent installIntent = new Intent(Intent.ACTION_VIEW);
                     installIntent.setDataAndType(apkUri, "application/vnd.android.package-archive");
