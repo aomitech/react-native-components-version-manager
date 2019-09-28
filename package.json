@@ -1,0 +1,24 @@
+{
+  "name": "@aomi/react-native-components-version-manager",
+  "version": "1.0.0",
+  "description": "React Native Version Manager",
+  "main": "index.js",
+  "repository": "git@github.com:aomitech/react-native-components-version-manager.git",
+  "homepage": "https://github.com/aomitech/react-native-components-version-manager",
+  "author": "Sean <sean.snow@live.com>",
+  "license": "MIT",
+  "scripts": {
+    "build": "yarn run build-ts",
+    "build-ts": "tsc -d",
+    "watch": "yarn run build && yarn run watch-ts",
+    "watch-ts": "tsc -w",
+    "clear": "rm -rf *.d.ts *.js *.js.map **/*.d.ts **/*.js **/*.js.map **/*/build"
+  },
+  "devDependencies": {
+    "@types/react": "^16.9.3",
+    "@types/react-native": "^0.60.16",
+    "react": "^16.9.0",
+    "react-native": "^0.61.1",
+    "typescript": "^3.6.3"
+  }
+}
