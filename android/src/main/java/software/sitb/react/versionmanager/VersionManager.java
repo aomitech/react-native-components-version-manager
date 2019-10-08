@@ -32,14 +32,17 @@ public class VersionManager extends ReactContextBaseJavaModule {
         return "RNCVersionManager";
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.P)
     @ReactMethod
     public void get(Promise promise) {
         try {
             PackageInfo info = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
             WritableMap response = Arguments.createMap();
             response.putString("packageName", info.packageName);
-            response.putInt("versionCode", (int) (info.getLongVersionCode()));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                response.putInt("versionCode", (int) (info.getLongVersionCode()));
+            } else {
+                response.putInt("versionCode", info.versionCode);
+            }
             response.putString("versionName", info.versionName);
 
             promise.resolve(response);
